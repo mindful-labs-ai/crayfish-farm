@@ -1,0 +1,3 @@
+{"type":"assistant","timestamp":"2024-01-01T00:00:00Z","message":{"usage":{"input_tokens":100,"output_tokens":50},"content":"Hello, I can help with that."}}
+{"type":"assistant","timestamp":"2024-01-01T00:01:00Z","message":{"usage":{"input_tokens":200,"output_tokens":100},"content":"Here is the solution."}}
+{"type":"assistant","timestamp":"2024-01-01T00:02:00Z","message":{"usage":{"input_tokens":150,"output_tokens":75},"content":[{"type":"text","text":"Final answer with multiple parts."}]}}

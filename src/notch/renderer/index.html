@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crawfish Park</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    width: 480px;
+    height: 520px;
+    overflow: hidden;
+    background: #14161e;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    user-select: none;
+  }
+
+  #panel {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    border-radius: 14px;
+    background: #14161e;
+    overflow: hidden;
+  }
+
+  /* Header */
+  #head {
+    height: 42px;
+    min-height: 42px;
+    background: #0d0f15;
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    gap: 8px;
+    -webkit-app-region: drag;
+    flex-shrink: 0;
+  }
+
+  .win-btn {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    -webkit-app-region: no-drag;
+    flex-shrink: 0;
+  }
+
+  #btn-close { background: #ff5f57; }
+  #btn-min   { background: #febc2e; }
+
+  #head-title {
+    flex: 1;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: #e0e4f0;
+    letter-spacing: 0.3px;
+  }
+
+  #head-sub {
+    font-size: 10px;
+    color: #5a607a;
+  }
+
+  /* Scene */
+  #scene {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    /* Sky gradient */
+    background: linear-gradient(180deg, #0a0e1a 0%, #0d1520 40%, #0f1f10 100%);
+  }
+
+  /* Stars */
+  #scene::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(1px 1px at 10% 15%, #fff 0%, transparent 100%),
+      radial-gradient(1px 1px at 25% 8%, #fff 0%, transparent 100%),
+      radial-gradient(1px 1px at 45% 20%, #fff 0%, transparent 100%),
+      radial-gradient(1px 1px at 65% 12%, #fff 0%, transparent 100%),
+      radial-gradient(1px 1px at 80% 6%, #fff 0%, transparent 100%),
+      radial-gradient(1px 1px at 92% 18%, #fff 0%, transparent 100%);
+    opacity: 0.7;
+    pointer-events: none;
+  }
+
+  /* Moon */
+  #scene::after {
+    content: '';
+    position: absolute;
+    top: 14px;
+    right: 30px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 40%, #fffde0, #f5d060 60%, #e8b030);
+    box-shadow: 0 0 12px 4px rgba(245, 208, 96, 0.35);
+    pointer-events: none;
+  }
+
+  /* Trees */
+  .tree {
+    position: absolute;
+    bottom: 50%;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+  }
+
+  .tree::before,
+  .tree::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-style: solid;
+  }
+
+  .tree-1 { left: 4%; bottom: calc(50% - 2px); }
+  .tree-1::before {
+    border-width: 0 14px 28px 14px;
+    border-color: transparent transparent #1a4a1a transparent;
+    bottom: 0; left: -14px;
+  }
+  .tree-1::after {
+    border-width: 0 10px 22px 10px;
+    border-color: transparent transparent #22602a transparent;
+    bottom: 18px; left: -10px;
+  }
+
+  .tree-2 { right: 8%; bottom: calc(50% - 2px); }
+  .tree-2::before {
+    border-width: 0 18px 36px 18px;
+    border-color: transparent transparent #163c16 transparent;
+    bottom: 0; left: -18px;
+  }
+  .tree-2::after {
+    border-width: 0 12px 26px 12px;
+    border-color: transparent transparent #1e5224 transparent;
+    bottom: 22px; left: -12px;
+  }
+
+  .tree-3 { left: 38%; bottom: calc(50% - 2px); }
+  .tree-3::before {
+    border-width: 0 11px 22px 11px;
+    border-color: transparent transparent #1c4a20 transparent;
+    bottom: 0; left: -11px;
+  }
+  .tree-3::after {
+    border-width: 0 8px 16px 8px;
+    border-color: transparent transparent #245e2c transparent;
+    bottom: 14px; left: -8px;
+  }
+
+  /* Ground */
+  .ground {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background: linear-gradient(180deg, #1a3a18 0%, #162e14 50%, #112210 100%);
+    pointer-events: none;
+  }
+
+  /* Pond */
+  .pond {
+    position: absolute;
+    bottom: 22%;
+    right: 6%;
+    width: 90px;
+    height: 40px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at 40% 40%, #1a3a5c, #0e2240 70%, #081820);
+    animation: shimmer 4s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  /* Grass strips */
+  .grass {
+    position: absolute;
+    bottom: 50%;
+    left: 0;
+    right: 0;
+    height: 14px;
+    display: flex;
+    pointer-events: none;
+  }
+
+  .grass-1 { bottom: 50%; }
+  .grass-2 { bottom: calc(50% + 2px); opacity: 0.7; transform: scaleX(0.85); }
+  .grass-3 { bottom: calc(50% - 3px); opacity: 0.5; transform: scaleX(1.1); }
+
+  .grass i {
+    display: inline-block;
+    width: 3px;
+    margin: 0 1.5px;
+    background: linear-gradient(to top, #2a6a20, #3a8a2a);
+    border-radius: 2px 2px 0 0;
+    transform-origin: bottom center;
+    animation: sway 3s ease-in-out infinite;
+    font-style: normal;
+  }
+
+  /* Crawfish area */
+  #area {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* Empty state */
+  #empty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    pointer-events: none;
+  }
+
+  #empty .empty-emoji {
+    font-size: 36px;
+    opacity: 0.4;
+  }
+
+  #empty .empty-text {
+    font-size: 11px;
+    color: #4a5068;
+    text-align: center;
+    line-height: 1.5;
+    max-width: 220px;
+  }
+
+  /* Stats bar */
+  #stats {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 28px;
+    background: rgba(13, 15, 21, 0.82);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 12px;
+    backdrop-filter: blur(4px);
+  }
+
+  .stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+  }
+
+  .stat-val {
+    font-size: 11px;
+    font-weight: 600;
+    color: #c8ceea;
+  }
+
+  .stat-lbl {
+    font-size: 9px;
+    color: #454a64;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Crawfish elements */
+  .cx {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    cursor: default;
+    transition: transform 0.15s;
+  }
+
+  .cx img {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    image-rendering: pixelated;
+  }
+
+  .cx .cx-name {
+    font-size: 9px;
+    color: #9aa0c0;
+    white-space: nowrap;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+  }
+
+  .cx .cx-lvl {
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+
+  .cx .cx-tok {
+    font-size: 8px;
+    color: #5a607a;
+  }
+
+  /* Level color classes */
+  .c1 { color: #888; }
+  .c2 { color: #00e5ff; }
+  .c3 { color: #69ff47; }
+  .c4 { color: #ffd740; }
+  .c5 { color: #ff1744; }
+
+  /* State animations via data-s attribute */
+  .cx[data-s="working"] img { animation: bounce 0.8s ease-in-out infinite; }
+  .cx[data-s="idle"]    img { animation: sway 3s ease-in-out infinite; }
+  .cx[data-s="sleeping"] img { animation: breathe 4s ease-in-out infinite; }
+
+  /* Sleeping zzz indicator */
+  .cx[data-s="sleeping"]::after {
+    content: 'z Z';
+    position: absolute;
+    top: -10px;
+    right: -8px;
+    font-size: 9px;
+    color: #6080b0;
+    animation: zzz 3s ease-in-out infinite;
+  }
+
+  /* Level glow via data-l attribute */
+  .cx[data-l="1"] img { filter: drop-shadow(0 0 3px #666); }
+  .cx[data-l="2"] img { filter: drop-shadow(0 0 5px #00e5ff); }
+  .cx[data-l="3"] img { filter: drop-shadow(0 0 7px #69ff47); }
+  .cx[data-l="4"] img { filter: drop-shadow(0 0 9px #ffd740); }
+  .cx[data-l="5"] img { filter: drop-shadow(0 0 12px #ff1744); }
+
+  /* Animations */
+  @keyframes sway {
+    0%, 100% { transform: rotate(-4deg); }
+    50%       { transform: rotate(4deg); }
+  }
+
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0) scaleY(1) rotate(-2deg); }
+    30%       { transform: translateY(-6px) scaleY(1.05) rotate(2deg); }
+    60%       { transform: translateY(-2px) scaleY(0.97) rotate(-1deg); }
+  }
+
+  @keyframes breathe {
+    0%, 100% { transform: scale(1);    opacity: 0.7; }
+    50%       { transform: scale(1.04); opacity: 0.88; }
+  }
+
+  @keyframes zzz {
+    0%   { transform: translateY(0);   opacity: 0; }
+    20%  { transform: translateY(-4px); opacity: 1; }
+    80%  { transform: translateY(-8px); opacity: 0.6; }
+    100% { transform: translateY(-12px); opacity: 0; }
+  }
+
+  @keyframes shimmer {
+    0%, 100% { opacity: 0.6; }
+    50%       { opacity: 0.75; }
+  }
+</style>
+</head>
+<body>
+<div id="panel">
+  <!-- Header -->
+  <div id="head">
+    <button class="win-btn" id="btn-close" title="Quit"></button>
+    <button class="win-btn" id="btn-min" title="Hide"></button>
+    <div id="head-title">🦞 Crawfish Park</div>
+    <span id="head-sub"></span>
+  </div>
+
+  <!-- Scene -->
+  <div id="scene">
+    <!-- Trees (CSS-only) -->
+    <div class="tree tree-1"></div>
+    <div class="tree tree-2"></div>
+    <div class="tree tree-3"></div>
+
+    <!-- Ground -->
+    <div class="ground"></div>
+
+    <!-- Pond -->
+    <div class="pond"></div>
+
+    <!-- Grass strips (generated by JS) -->
+    <div class="grass grass-1" id="grass-1"></div>
+    <div class="grass grass-2" id="grass-2"></div>
+    <div class="grass grass-3" id="grass-3"></div>
+
+    <!-- Crawfish area -->
+    <div id="area"></div>
+
+    <!-- Empty state -->
+    <div id="empty">
+      <div class="empty-emoji">🦞</div>
+      <div class="empty-text">Claude Code 세션을 시작하면<br>가재가 나타납니다</div>
+    </div>
+
+    <!-- Stats bar -->
+    <div id="stats">
+      <div class="stat-item">
+        <span class="stat-val" id="stat-sessions">0</span>
+        <span class="stat-lbl">Sessions</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-val" id="stat-active">0</span>
+        <span class="stat-lbl">Active</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-val" id="stat-tokens">0</span>
+        <span class="stat-lbl">Tokens</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Constants
+  const LVL = ['', 'baby', 'juvenile', 'adult', 'warrior', 'king'];
+  const LNAME = ['', 'Baby', 'Juvenile', 'Adult', 'Warrior', 'King'];
+  const POS = [
+    { left: '14%', bottom: '22%' },
+    { left: '54%', bottom: '26%' },
+    { left: '34%', bottom: '16%' },
+    { left: '72%', bottom: '20%' },
+    { left: '22%', bottom: '32%' },
+    { left: '46%', bottom: '12%' },
+    { left: '8%',  bottom: '38%' },
+    { left: '80%', bottom: '30%' },
+  ];
+
+  // State
+  let sprites = {};
+
+  // Generate grass blades
+  function generateGrass() {
+    for (let g = 1; g <= 3; g++) {
+      const el = document.getElementById('grass-' + g);
+      if (!el) continue;
+      for (let i = 0; i < 26; i++) {
+        const blade = document.createElement('i');
+        const delay = (Math.random() * 3).toFixed(2);
+        const height = (8 + Math.random() * 8).toFixed(1);
+        blade.style.height = height + 'px';
+        blade.style.animationDelay = delay + 's';
+        el.appendChild(blade);
+      }
+    }
+  }
+
+  // Token formatter
+  function fmt(n) {
+    if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
+    if (n >= 1_000)     return (n / 1_000).toFixed(1) + 'K';
+    return String(n);
+  }
+
+  // Sprite key
+  function sk(a) {
+    const lvlName = LVL[a.level] || 'baby';
+    const state = a.state === 'working' ? 'working'
+                : a.state === 'idle'    ? 'idle'
+                : 'sleeping';
+    return lvlName + '_' + state;
+  }
+
+  // Render function
+  function render(agents) {
+    const area = document.getElementById('area');
+    const empty = document.getElementById('empty');
+
+    if (!agents || agents.length === 0) {
+      area.innerHTML = '';
+      empty.style.display = 'flex';
+      document.getElementById('stat-sessions').textContent = '0';
+      document.getElementById('stat-active').textContent = '0';
+      document.getElementById('stat-tokens').textContent = '0';
+      return;
+    }
+
+    empty.style.display = 'none';
+
+    // Sort: working first, then by level descending
+    const sorted = [...agents].sort((a, b) => {
+      if (a.state === 'working' && b.state !== 'working') return -1;
+      if (b.state === 'working' && a.state !== 'working') return 1;
+      return b.level - a.level;
+    });
+
+    // Track existing elements by sessionId
+    const existing = new Map();
+    area.querySelectorAll('.cx').forEach(el => {
+      existing.set(el.dataset.sid, el);
+    });
+
+    const seen = new Set();
+
+    sorted.forEach((agent, i) => {
+      seen.add(agent.sessionId);
+      const pos = POS[i % POS.length];
+
+      let el = existing.get(agent.sessionId);
+      if (!el) {
+        // Create new element
+        el = document.createElement('div');
+        el.className = 'cx';
+        el.dataset.sid = agent.sessionId;
+
+        const img = document.createElement('img');
+        img.alt = '';
+        el.appendChild(img);
+
+        const name = document.createElement('div');
+        name.className = 'cx-name';
+        el.appendChild(name);
+
+        const lvlEl = document.createElement('div');
+        lvlEl.className = 'cx-lvl';
+        el.appendChild(lvlEl);
+
+        const tok = document.createElement('div');
+        tok.className = 'cx-tok';
+        el.appendChild(tok);
+
+        area.appendChild(el);
+      }
+
+      // Update position
+      el.style.left = pos.left;
+      el.style.bottom = pos.bottom;
+
+      // Update state + level attributes for CSS
+      el.dataset.s = agent.state;
+      el.dataset.l = String(agent.level);
+
+      // Update sprite image
+      const imgEl = el.querySelector('img');
+      const key = sk(agent);
+      if (sprites[key]) {
+        imgEl.src = sprites[key];
+      } else {
+        imgEl.src = '';
+      }
+
+      // Update name
+      el.querySelector('.cx-name').textContent = agent.projectName || agent.sessionId.slice(0, 8);
+
+      // Update level text with color class
+      const lvlEl = el.querySelector('.cx-lvl');
+      lvlEl.textContent = LNAME[agent.level] || 'Baby';
+      lvlEl.className = 'cx-lvl c' + (agent.level || 1);
+
+      // Update token count
+      el.querySelector('.cx-tok').textContent = fmt(agent.rawTokenUsage || 0);
+    });
+
+    // Remove stale elements
+    existing.forEach((el, sid) => {
+      if (!seen.has(sid)) {
+        el.remove();
+      }
+    });
+
+    // Update stats bar
+    const active = agents.filter(a => a.state === 'working').length;
+    const totalRaw = agents.reduce((s, a) => s + (a.rawTokenUsage || 0), 0);
+    document.getElementById('stat-sessions').textContent = String(agents.length);
+    document.getElementById('stat-active').textContent = String(active);
+    document.getElementById('stat-tokens').textContent = fmt(totalRaw);
+  }
+
+  // Init
+  generateGrass();
+
+  // Event listeners
+  document.getElementById('btn-close').addEventListener('click', () => window.api.quit());
+  document.getElementById('btn-min').addEventListener('click', () => window.api.hide());
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') window.api.hide();
+  });
+
+  // Listen for updates from main process
+  window.api.onUpdate((data) => {
+    if (data.sprites) {
+      sprites = data.sprites;
+    }
+    if (data.agents !== undefined) {
+      render(data.agents);
+    }
+  });
+</script>
+</body>
+</html>

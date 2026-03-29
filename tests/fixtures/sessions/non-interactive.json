@@ -1,0 +1,7 @@
+{
+  "pid": 99999,
+  "sessionId": "test-session-non",
+  "cwd": "/test/other",
+  "startedAt": 1700000000000,
+  "kind": "task"
+}

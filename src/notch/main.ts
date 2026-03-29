@@ -1,0 +1,262 @@
+import { app, BrowserWindow, Tray, screen, ipcMain, nativeImage, Menu } from 'electron';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { readFileSync, existsSync, writeFileSync, unlinkSync } from 'node:fs';
+import { discoverAgents } from '../services/agent-tracker.js';
+import type { AgentInfo } from '../core/types.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Constants
+const PANEL_W = 480;
+const PANEL_H = 520;
+const BG = '#14161e';
+const NOTCH_PID = join(process.env.HOME ?? '/tmp', '.crayfish-farm', 'notch.pid');
+
+// Single instance lock
+if (!app.requestSingleInstanceLock()) {
+  app.quit();
+  process.exit(0);
+}
+
+// PID management
+function writePid(): void {
+  try {
+    writeFileSync(NOTCH_PID, String(process.pid), 'utf8');
+  } catch {
+    // ignore
+  }
+}
+
+function removePid(): void {
+  try {
+    if (existsSync(NOTCH_PID)) {
+      unlinkSync(NOTCH_PID);
+    }
+  } catch {
+    // ignore
+  }
+}
+
+// Asset paths
+function assetsDir(): string {
+  return join(__dirname, '..', '..', 'assets', 'crayfish');
+}
+
+function rendererHtml(): string {
+  const distPath = join(__dirname, 'renderer', 'index.html');
+  if (existsSync(distPath)) return distPath;
+  // fallback to source path
+  return join(__dirname, '..', '..', 'src', 'notch', 'renderer', 'index.html');
+}
+
+// Sprite loading
+const LEVEL_NAMES = ['', 'baby', 'juvenile', 'adult', 'warrior', 'king'];
+const STATES = ['idle', 'working', 'complete', 'sleeping'];
+
+function loadSprites(): Record<string, string> {
+  const sprites: Record<string, string> = {};
+  const dir = assetsDir();
+  for (let level = 1; level <= 5; level++) {
+    const levelName = LEVEL_NAMES[level];
+    for (const state of STATES) {
+      const key = `${levelName}_${state}`;
+      const filePath = join(dir, `${levelName}_${state}.png`);
+      if (existsSync(filePath)) {
+        try {
+          const data = readFileSync(filePath);
+          sprites[key] = `data:image/png;base64,${data.toString('base64')}`;
+        } catch {
+          // skip missing sprites
+        }
+      }
+    }
+  }
+  return sprites;
+}
+
+// Tray icon
+function makeTrayIcon(agents: AgentInfo[]): Electron.NativeImage {
+  if (agents.length === 0) return nativeImage.createEmpty();
+
+  // Find highest-level agent
+  const top = agents.reduce((best, a) => (a.level > best.level ? a : best), agents[0]);
+  const levelName = LEVEL_NAMES[top.level] || 'baby';
+  const state = top.state === 'working' ? 'working' : top.state === 'idle' ? 'idle' : 'sleeping';
+  const dir = assetsDir();
+  const filePath = join(dir, `${levelName}_${state}.png`);
+
+  if (existsSync(filePath)) {
+    try {
+      const img = nativeImage.createFromPath(filePath);
+      return img.resize({ width: 18, height: 18 });
+    } catch {
+      // fall through
+    }
+  }
+  return nativeImage.createEmpty();
+}
+
+// App state
+let tray: Tray | null = null;
+let panel: BrowserWindow | null = null;
+let pollInterval: ReturnType<typeof setInterval> | null = null;
+let spritesSent = false;
+let loadedSprites: Record<string, string> = {};
+let lastShowAt = 0;
+
+// Panel positioning and toggle
+function togglePanel(): void {
+  if (!panel || !tray) return;
+
+  if (panel.isVisible()) {
+    panel.hide();
+    return;
+  }
+
+  const trayBounds = tray.getBounds();
+  const workArea = screen.getPrimaryDisplay().workArea;
+
+  const x = Math.round(
+    Math.min(
+      Math.max(trayBounds.x + trayBounds.width / 2 - PANEL_W / 2, workArea.x),
+      workArea.x + workArea.width - PANEL_W
+    )
+  );
+  const y = Math.round(trayBounds.y + trayBounds.height + 4);
+
+  panel.setPosition(x, y);
+  panel.show();
+  panel.focus();
+  lastShowAt = Date.now();
+}
+
+// Data sending
+function sendData(): void {
+  if (!panel) return;
+
+  let agents: AgentInfo[];
+  try {
+    agents = discoverAgents();
+  } catch {
+    agents = [];
+  }
+
+  // Update tray icon and tooltip
+  if (tray) {
+    try {
+      tray.setImage(makeTrayIcon(agents));
+    } catch {
+      // ignore tray icon errors
+    }
+    const active = agents.filter((a) => a.state === 'working').length;
+    tray.setToolTip(`Crawfish Park — ${agents.length} sessions, ${active} active`);
+  }
+
+  if (!spritesSent) {
+    panel.webContents.send('update', { agents, sprites: loadedSprites });
+    spritesSent = true;
+  } else {
+    panel.webContents.send('update', { agents });
+  }
+}
+
+// Shutdown
+function shutdown(): void {
+  if (pollInterval) {
+    clearInterval(pollInterval);
+    pollInterval = null;
+  }
+  removePid();
+  if (panel) {
+    panel.destroy();
+    panel = null;
+  }
+  if (tray) {
+    tray.destroy();
+    tray = null;
+  }
+  app.quit();
+}
+
+// App lifecycle
+app.dock?.hide();
+
+app.on('ready', () => {
+  writePid();
+
+  // Load sprites
+  loadedSprites = loadSprites();
+
+  // Create tray
+  const initialIcon = nativeImage.createEmpty();
+  tray = new Tray(initialIcon);
+  tray.setToolTip('Crawfish Park');
+
+  // Tray left-click
+  tray.on('click', () => {
+    togglePanel();
+  });
+
+  // Tray right-click context menu
+  tray.on('right-click', () => {
+    const menu = Menu.buildFromTemplate([
+      { label: 'Open', click: togglePanel },
+      { type: 'separator' },
+      { label: 'Quit', click: shutdown },
+    ]);
+    tray!.popUpContextMenu(menu);
+  });
+
+  // Create BrowserWindow
+  panel = new BrowserWindow({
+    width: PANEL_W,
+    height: PANEL_H,
+    show: false,
+    frame: false,
+    transparent: false,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    resizable: false,
+    backgroundColor: BG,
+    webPreferences: {
+      preload: join(__dirname, 'preload.cjs'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+
+  // Visible on all workspaces
+  panel.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+
+  // Load renderer HTML
+  panel.loadFile(rendererHtml());
+
+  // Blur handler with 500ms debounce
+  panel.on('blur', () => {
+    if (Date.now() - lastShowAt > 500) {
+      panel?.hide();
+    }
+  });
+
+  // Start polling after page loads
+  panel.webContents.on('did-finish-load', () => {
+    sendData();
+    pollInterval = setInterval(sendData, 2000);
+  });
+});
+
+// IPC handlers
+ipcMain.on('quit', () => shutdown());
+ipcMain.on('hide', () => panel?.hide());
+
+// Second instance: toggle panel
+app.on('second-instance', () => {
+  togglePanel();
+});
+
+// Clean up on exit
+app.on('before-quit', () => {
+  removePid();
+});
