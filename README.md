@@ -11,10 +11,14 @@
 _Your agents are crawfish. Watch them grow._
 
 <p align="center">
-  <img src="assets/README_Image.png" alt="Growth System — Baby → Juvenile → Adult → Warrior → King" width="700" />
+  <img src="assets/grow_system.png" alt="Growth System — Baby → Juvenile → Adult → Warrior → King" width="700" />
 </p>
 
 [Quick Start](#quick-start) • [Commands](#cli-commands) • [Widget](#-mac-menu-bar-widget) • [Architecture](#architecture) • [Development](#development)
+
+### 📺 See it in Action
+
+[![Introduction Video](https://img.youtube.com/vi/-L5WijhaLOA/0.jpg)](https://youtu.be/-L5WijhaLOA?si=6FDxRO6p_C9_XQd2)
 
 ---
 
