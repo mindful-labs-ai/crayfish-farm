@@ -846,6 +846,9 @@
       el.dataset.s = agent.state;
       el.dataset.l = String(agent.level);
 
+      // z-index: working agents always in front
+      el.style.zIndex = agent.state === 'working' ? '8' : agent.state === 'idle' ? '6' : '4';
+
       // Update sprite image
       const imgEl = el.querySelector('img');
       const key = sk(agent);
