@@ -76,7 +76,8 @@ export function renderCard(
   lines.push(topBorder);
 
   // Crawfish art (centered)
-  const artLines = getCrawfishArt(agent.level, agent.state, frame);
+  const artRaw = getCrawfishArt(agent.level, agent.state, frame);
+  const artLines = artRaw ? artRaw.split('\n').filter(l => l.length > 0) : [];
   for (const artLine of artLines) {
     const centered = centerToWidth(artLine, innerWidth);
     lines.push(`${boxSide()}${centered}${boxSide()}`);

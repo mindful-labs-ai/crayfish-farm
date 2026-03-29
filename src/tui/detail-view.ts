@@ -16,7 +16,8 @@ export function renderDetailView(agent: AgentInfo, allAgents: AgentInfo[], frame
   parts.push(chalk.dim(horizontalLine(width)));
 
   // Hires crawfish art
-  const artLines = getCrawfishHires(agent.level, agent.state, frame);
+  const artRaw = getCrawfishHires(agent.level, agent.state, frame);
+  const artLines = artRaw ? artRaw.split('\n').filter(l => l.length > 0) : [];
   for (const artLine of artLines) {
     parts.push(artLine);
   }

@@ -119,7 +119,19 @@ export async function startDashboard(): Promise<void> {
       // Apply runtime effects (zZZ animation for sleeping agents)
       output = applyRuntimeEffects(output, agents, renderFrame);
 
-      process.stdout.write(CLEAR_SCREEN + MOVE_HOME + output);
+      // Render in-place: position each line explicitly, erase trailing chars
+      const rows = process.stdout.rows ?? 24;
+      const outputLines = output.split('\n');
+      let buf = MOVE_HOME;
+      const limit = Math.min(outputLines.length, rows);
+      for (let i = 0; i < limit; i++) {
+        buf += `\x1b[${i + 1};1H${outputLines[i]}\x1b[K`;
+      }
+      // Clear remaining rows
+      for (let i = limit; i < rows; i++) {
+        buf += `\x1b[${i + 1};1H\x1b[K`;
+      }
+      process.stdout.write(buf);
       renderFrame++;
     } catch {
       // silently ignore render errors

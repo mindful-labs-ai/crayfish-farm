@@ -151,13 +151,22 @@ function togglePanel(): void {
   lastShowAt = Date.now();
 }
 
+// Filter agents for the widget: most recently active 10
+const MAX_AGENTS = 10;
+
+function filterAgentsForWidget(agents: AgentInfo[]): AgentInfo[] {
+  return [...agents]
+    .sort((a, b) => b.lastActivityAt - a.lastActivityAt)
+    .slice(0, MAX_AGENTS);
+}
+
 // Data sending
 function sendData(): void {
   if (!panel) return;
 
   let agents: AgentInfo[];
   try {
-    agents = discoverAgents();
+    agents = filterAgentsForWidget(discoverAgents());
   } catch {
     agents = [];
   }
