@@ -64,13 +64,19 @@ export function renderGridView(
   // Horizontal line
   parts.push(chalk.dim(horizontalLine(Math.min(cols, 80))));
 
+  // Limit to 4 most recently active agents
+  const MAX_TUI_AGENTS = 4;
+  const displayed = [...agents]
+    .sort((a, b) => b.lastActivityAt - a.lastActivityAt)
+    .slice(0, MAX_TUI_AGENTS);
+
   // Cards
-  if (agents.length === 0) {
+  if (displayed.length === 0) {
     parts.push(chalk.dim('  No active Claude sessions found.'));
     parts.push('');
   } else if (columns === 1) {
-    for (let i = 0; i < agents.length; i++) {
-      const agent = agents[i]!;
+    for (let i = 0; i < displayed.length; i++) {
+      const agent = displayed[i]!;
       const flash = flashSet.has(agent.sessionId);
       const cardLines = renderCard(agent, i, frame, inner, flash);
       for (const line of cardLines) {
@@ -80,9 +86,9 @@ export function renderGridView(
     }
   } else {
     // 2-column layout: pair agents
-    for (let i = 0; i < agents.length; i += 2) {
-      const leftAgent = agents[i]!;
-      const rightAgent = agents[i + 1];
+    for (let i = 0; i < displayed.length; i += 2) {
+      const leftAgent = displayed[i]!;
+      const rightAgent = displayed[i + 1];
 
       const leftFlash = flashSet.has(leftAgent.sessionId);
       const leftLines = renderCard(leftAgent, i, frame, inner, leftFlash);
