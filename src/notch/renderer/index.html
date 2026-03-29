@@ -556,136 +556,126 @@
   .cx:hover { transform: scale(1.12); z-index: 10; }
   .cx.selected { z-index: 20; transform: scale(1.15); }
 
-  /* Speech bubble */
-  .bubble {
+  /* Info card — bottom panel */
+  #info-card {
     position: absolute;
+    bottom: 32px;
+    left: 12px;
+    right: 12px;
     z-index: 40;
-    pointer-events: auto;
-    animation: bubblePop 0.2s ease-out;
-  }
-
-  .bubble-box {
     background: #faf5e8;
-    border: 2.5px solid #a0855a;
     border-radius: 14px;
-    padding: 10px 12px;
-    min-width: 180px;
-    max-width: 260px;
-    box-shadow: 2px 3px 0 rgba(80, 60, 30, 0.25), 0 6px 20px rgba(0,0,0,0.35);
-    position: relative;
+    box-shadow: 0 -2px 16px rgba(0,0,0,0.25);
+    padding: 14px 16px 12px;
+    display: none;
+    animation: cardSlideUp 0.2s ease-out;
   }
 
-  /* Wooden signpost feel — subtle grain */
-  .bubble-box::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 12px;
-    background: repeating-linear-gradient(
-      90deg,
-      transparent 0px,
-      rgba(160, 133, 90, 0.04) 2px,
-      transparent 4px
-    );
-    pointer-events: none;
+  #info-card.show { display: block; }
+
+  @keyframes cardSlideUp {
+    0%   { opacity: 0; transform: translateY(12px); }
+    100% { opacity: 1; transform: translateY(0); }
   }
 
-  /* Tail — triangle pointing down to the crawfish */
-  .bubble-tail {
-    width: 0;
-    height: 0;
-    border-left: 8px solid transparent;
-    border-right: 8px solid transparent;
-    border-top: 10px solid #a0855a;
-    margin-left: 24px;
-    position: relative;
+  /* Top row: sprite + name/state + level + close */
+  .card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
   }
 
-  .bubble-tail::after {
-    content: '';
-    position: absolute;
-    top: -12.5px;
-    left: -6px;
-    width: 0;
-    height: 0;
-    border-left: 6px solid transparent;
-    border-right: 6px solid transparent;
-    border-top: 8px solid #faf5e8;
+  .card-sprite {
+    width: 52px;
+    height: 52px;
+    object-fit: contain;
+    image-rendering: pixelated;
+    flex-shrink: 0;
   }
 
-  .bubble-name {
-    font-size: 12px;
+  .card-info { flex: 1; min-width: 0; }
+
+  .card-name {
+    font-size: 16px;
     font-weight: 700;
-    color: #4a3820;
-    margin-bottom: 2px;
+    color: #2a1e10;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .card-state {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 5px;
+    margin-top: 3px;
+  }
+
+  .card-state.working  { background: #d4edbc; color: #3a6a18; }
+  .card-state.idle     { background: #f5e8c0; color: #c08a10; }
+  .card-state.sleeping { background: #d0dae8; color: #506080; }
+
+  .card-level {
+    font-size: 13px;
+    font-weight: 700;
+    color: #8a6a40;
+    text-align: right;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .card-close {
+    width: 24px;
+    height: 24px;
+    border: 1px solid #d0c4a8;
+    border-radius: 50%;
+    background: transparent;
+    color: #8a7a60;
+    font-size: 14px;
+    cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 5px;
+    justify-content: center;
+    flex-shrink: 0;
+    line-height: 1;
+    transition: background 0.15s;
   }
 
-  .bubble-state {
-    display: inline-block;
-    font-size: 8px;
-    font-weight: 700;
-    padding: 1px 5px;
-    border-radius: 4px;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-    vertical-align: middle;
-  }
+  .card-close:hover { background: #eee4d0; }
 
-  .bubble-state.working  { background: #d4edbc; color: #3a6a18; }
-  .bubble-state.idle     { background: #f5e8c0; color: #8a6a10; }
-  .bubble-state.sleeping { background: #d0dae8; color: #506080; }
-
-  .bubble-meta {
-    font-size: 9px;
-    color: #8a7a60;
-    margin-bottom: 6px;
-    display: flex;
-    gap: 6px;
-  }
-
-  .bubble-sep {
-    border: none;
-    border-top: 1px dashed #c8b890;
-    margin: 4px 0;
-  }
-
-  .bubble-text {
-    font-size: 11px;
-    line-height: 1.5;
-    color: #5a4a30;
+  /* Summary text area */
+  .card-body {
+    background: #f2ece0;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 13px;
+    line-height: 1.55;
+    color: #3a3020;
     word-break: break-word;
-    max-height: 90px;
+    max-height: 80px;
     overflow-y: auto;
+    border-left: 3px solid #d4c8a8;
   }
 
-  .bubble-text::-webkit-scrollbar { width: 3px; }
-  .bubble-text::-webkit-scrollbar-thumb { background: #c8b890; border-radius: 2px; }
+  .card-body::-webkit-scrollbar { width: 3px; }
+  .card-body::-webkit-scrollbar-thumb { background: #c8b890; border-radius: 2px; }
 
-  .bubble-text:empty::after {
+  .card-body:empty::after {
     content: '...';
     color: #b0a080;
     font-style: italic;
   }
 
-  .bubble-label {
-    font-size: 8px;
-    font-weight: 600;
-    color: #a09070;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 2px;
-  }
-
-  .bubble-emoji {
+  /* Feed count */
+  .card-footer {
+    text-align: right;
+    margin-top: 6px;
     font-size: 11px;
-  }
-
-  @keyframes bubblePop {
-    0%   { opacity: 0; transform: scale(0.85) translateY(6px); }
-    100% { opacity: 1; transform: scale(1) translateY(0); }
+    color: #a09070;
+    font-weight: 600;
   }
 </style>
 </head>
@@ -739,8 +729,20 @@
       <div class="empty-text">Claude Code 세션을 시작하면<br>가재가 나타납니다</div>
     </div>
 
-    <!-- Speech bubble (injected by JS) -->
-    <div id="bubble-container"></div>
+    <!-- Info card -->
+    <div id="info-card">
+      <div class="card-header">
+        <img class="card-sprite" id="card-sprite" src="" alt="">
+        <div class="card-info">
+          <div class="card-name" id="card-name"></div>
+          <div class="card-state" id="card-state"></div>
+        </div>
+        <div class="card-level" id="card-level"></div>
+        <button class="card-close" id="card-close">&times;</button>
+      </div>
+      <div class="card-body" id="card-body"></div>
+      <div class="card-footer" id="card-footer"></div>
+    </div>
 
     <!-- Stats bar -->
     <div id="stats">
@@ -970,7 +972,7 @@
     return s || farmState(state).text;
   }
 
-  // Show speech bubble for a crawfish
+  // Show info card for a crawfish
   function showBubble(agent, cxEl) {
     if (!agent || !cxEl) return;
 
@@ -985,89 +987,54 @@
     cxEl.classList.add('selected');
 
     const fs = farmState(agent.state);
-    const container = document.getElementById('bubble-container');
-    const scene = document.getElementById('scene');
-    const sceneRect = scene.getBoundingClientRect();
-    const cxRect = cxEl.getBoundingClientRect();
+    const card = document.getElementById('info-card');
 
-    // Build bubble
-    const bub = document.createElement('div');
-    bub.className = 'bubble';
-    bub.id = 'active-bubble';
+    // Sprite
+    const key = sk(agent);
+    document.getElementById('card-sprite').src = sprites[key] || '';
 
-    const box = document.createElement('div');
-    box.className = 'bubble-box';
+    // Name
+    document.getElementById('card-name').textContent = agent.projectName || agent.sessionId.slice(0, 12);
 
-    // Name row
-    const nameRow = document.createElement('div');
-    nameRow.className = 'bubble-name';
-    nameRow.innerHTML =
-      '<span class="bubble-emoji">' + fs.emoji + '</span> ' +
-      (agent.projectName || agent.sessionId.slice(0, 12)) +
-      ' <span class="bubble-state ' + agent.state + '">' + fs.label + '</span>';
-    box.appendChild(nameRow);
+    // State badge
+    const stateEl = document.getElementById('card-state');
+    stateEl.textContent = fs.label.charAt(0).toUpperCase() + fs.label.slice(1);
+    stateEl.className = 'card-state ' + agent.state;
 
-    // Meta
-    const meta = document.createElement('div');
-    meta.className = 'bubble-meta';
-    meta.textContent = 'Lv' + agent.level + ' ' + (LNAME[agent.level] || '') +
-      '  ·  ' + fmt(agent.rawTokenUsage || 0) + ' feed  ·  ' + timeAgo(agent.lastActivityAt);
-    box.appendChild(meta);
+    // Level
+    document.getElementById('card-level').textContent = 'Lv' + agent.level + ' ' + (LNAME[agent.level] || '');
 
-    // Separator
-    const sep = document.createElement('hr');
-    sep.className = 'bubble-sep';
-    box.appendChild(sep);
+    // Body text
+    document.getElementById('card-body').textContent = summarize(agent.lastExchange, agent.state);
 
-    // Summary text
-    const label = document.createElement('div');
-    label.className = 'bubble-label';
-    label.textContent = agent.state === 'working' ? '🌿 doing now' : '📋 last activity';
-    box.appendChild(label);
+    // Feed
+    document.getElementById('card-footer').textContent = 'Feed: ' + fmt(agent.rawTokenUsage || 0);
 
-    const txt = document.createElement('div');
-    txt.className = 'bubble-text';
-    txt.textContent = summarize(agent.lastExchange, agent.state);
-    box.appendChild(txt);
-
-    bub.appendChild(box);
-
-    // Tail
-    const tail = document.createElement('div');
-    tail.className = 'bubble-tail';
-    bub.appendChild(tail);
-
-    container.appendChild(bub);
-
-    // Position: above the crawfish, clamped inside scene
-    const bubW = 220;
-    let left = (cxRect.left - sceneRect.left) + cxRect.width / 2 - 36;
-    left = Math.max(6, Math.min(left, sceneRect.width - bubW - 6));
-    let bottom = sceneRect.bottom - cxRect.top + 4;
-
-    bub.style.left = left + 'px';
-    bub.style.bottom = bottom + 'px';
+    card.classList.add('show');
   }
 
-  // Hide bubble
+  // Hide card
   function hideBubble() {
     selectedSid = null;
-    const old = document.getElementById('active-bubble');
-    if (old) old.remove();
+    document.getElementById('info-card').classList.remove('show');
     document.querySelectorAll('.cx.selected').forEach(el => el.classList.remove('selected'));
   }
 
-  // Refresh bubble if still open
+  // Refresh card if still open
   function refreshBubble() {
     if (!selectedSid) return;
     const agent = allAgents.find(a => a.sessionId === selectedSid);
     const cxEl = document.querySelector('.cx[data-sid="' + selectedSid + '"]');
     if (agent && cxEl) {
-      hideBubble();
-      selectedSid = agent.sessionId;
-      cxEl.classList.add('selected');
-      // Silently refresh content without re-animating
-      showBubble(agent, cxEl);
+      // Update content without re-triggering animation
+      const fs = farmState(agent.state);
+      const key = sk(agent);
+      document.getElementById('card-sprite').src = sprites[key] || '';
+      document.getElementById('card-body').textContent = summarize(agent.lastExchange, agent.state);
+      document.getElementById('card-footer').textContent = 'Feed: ' + fmt(agent.rawTokenUsage || 0);
+      const stateEl = document.getElementById('card-state');
+      stateEl.textContent = fs.label.charAt(0).toUpperCase() + fs.label.slice(1);
+      stateEl.className = 'card-state ' + agent.state;
     } else {
       hideBubble();
     }
@@ -1115,9 +1082,12 @@
     }, 3000);
   });
 
-  // Click anywhere on scene to dismiss bubble
+  // Close button
+  document.getElementById('card-close').addEventListener('click', () => hideBubble());
+
+  // Click anywhere on scene to dismiss card
   document.getElementById('scene').addEventListener('click', (e) => {
-    if (selectedSid && !e.target.closest('.cx') && !e.target.closest('.bubble')) {
+    if (selectedSid && !e.target.closest('.cx') && !e.target.closest('#info-card')) {
       hideBubble();
     }
   });
