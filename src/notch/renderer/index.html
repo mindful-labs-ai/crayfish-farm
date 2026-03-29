@@ -283,7 +283,7 @@
     flex-direction: column;
     align-items: center;
     gap: 2px;
-    cursor: default;
+    cursor: pointer;
     transition: transform 0.15s;
   }
 
@@ -373,6 +373,141 @@
     0%, 100% { opacity: 0.6; }
     50%       { opacity: 0.75; }
   }
+
+  .cx:hover { transform: scale(1.12); z-index: 10; }
+  .cx.selected { z-index: 20; transform: scale(1.15); }
+
+  /* Speech bubble */
+  .bubble {
+    position: absolute;
+    z-index: 40;
+    pointer-events: auto;
+    animation: bubblePop 0.2s ease-out;
+  }
+
+  .bubble-box {
+    background: #faf5e8;
+    border: 2.5px solid #a0855a;
+    border-radius: 14px;
+    padding: 10px 12px;
+    min-width: 180px;
+    max-width: 260px;
+    box-shadow: 2px 3px 0 rgba(80, 60, 30, 0.25), 0 6px 20px rgba(0,0,0,0.35);
+    position: relative;
+  }
+
+  /* Wooden signpost feel — subtle grain */
+  .bubble-box::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    background: repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      rgba(160, 133, 90, 0.04) 2px,
+      transparent 4px
+    );
+    pointer-events: none;
+  }
+
+  /* Tail — triangle pointing down to the crawfish */
+  .bubble-tail {
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 10px solid #a0855a;
+    margin-left: 24px;
+    position: relative;
+  }
+
+  .bubble-tail::after {
+    content: '';
+    position: absolute;
+    top: -12.5px;
+    left: -6px;
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 8px solid #faf5e8;
+  }
+
+  .bubble-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: #4a3820;
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .bubble-state {
+    display: inline-block;
+    font-size: 8px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    vertical-align: middle;
+  }
+
+  .bubble-state.working  { background: #d4edbc; color: #3a6a18; }
+  .bubble-state.idle     { background: #f5e8c0; color: #8a6a10; }
+  .bubble-state.sleeping { background: #d0dae8; color: #506080; }
+
+  .bubble-meta {
+    font-size: 9px;
+    color: #8a7a60;
+    margin-bottom: 6px;
+    display: flex;
+    gap: 6px;
+  }
+
+  .bubble-sep {
+    border: none;
+    border-top: 1px dashed #c8b890;
+    margin: 4px 0;
+  }
+
+  .bubble-text {
+    font-size: 11px;
+    line-height: 1.5;
+    color: #5a4a30;
+    word-break: break-word;
+    max-height: 90px;
+    overflow-y: auto;
+  }
+
+  .bubble-text::-webkit-scrollbar { width: 3px; }
+  .bubble-text::-webkit-scrollbar-thumb { background: #c8b890; border-radius: 2px; }
+
+  .bubble-text:empty::after {
+    content: '...';
+    color: #b0a080;
+    font-style: italic;
+  }
+
+  .bubble-label {
+    font-size: 8px;
+    font-weight: 600;
+    color: #a09070;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+  }
+
+  .bubble-emoji {
+    font-size: 11px;
+  }
+
+  @keyframes bubblePop {
+    0%   { opacity: 0; transform: scale(0.85) translateY(6px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); }
+  }
 </style>
 </head>
 <body>
@@ -412,6 +547,9 @@
       <div class="empty-text">Claude Code 세션을 시작하면<br>가재가 나타납니다</div>
     </div>
 
+    <!-- Speech bubble (injected by JS) -->
+    <div id="bubble-container"></div>
+
     <!-- Stats bar -->
     <div id="stats">
       <div class="stat-item">
@@ -447,6 +585,8 @@
 
   // State
   let sprites = {};
+  let allAgents = [];
+  let selectedSid = null;
 
   // Generate grass blades
   function generateGrass() {
@@ -568,6 +708,9 @@
 
       // Update token count
       el.querySelector('.cx-tok').textContent = fmt(agent.rawTokenUsage || 0);
+
+      // Click handler — show speech bubble
+      el.onclick = (e) => { e.stopPropagation(); showBubble(agent, el); };
     });
 
     // Remove stale elements
@@ -585,6 +728,146 @@
     document.getElementById('stat-tokens').textContent = fmt(totalRaw);
   }
 
+  // Farm-themed state descriptions
+  function farmState(s) {
+    if (s === 'working') return { emoji: '🔨', label: 'feeding', text: '열심히 먹이 먹는 중' };
+    if (s === 'idle')    return { emoji: '🌾', label: 'resting', text: '풀밭에서 쉬는 중' };
+    return                       { emoji: '💤', label: 'sleeping', text: '깊이 잠든 중' };
+  }
+
+  // Time ago formatter
+  function timeAgo(ts) {
+    if (!ts) return '—';
+    const sec = Math.floor((Date.now() - ts) / 1000);
+    if (sec < 60) return 'just now';
+    const min = Math.floor(sec / 60);
+    if (min < 60) return min + 'm ago';
+    const hr = Math.floor(min / 60);
+    if (hr < 24) return hr + 'h ' + (min % 60) + 'm ago';
+    return Math.floor(hr / 24) + 'd ago';
+  }
+
+  // Summarize exchange for the bubble — short, human-friendly
+  function summarize(text, state) {
+    if (!text || !text.trim()) {
+      const fs = farmState(state);
+      return fs.text;
+    }
+    let s = text.replace(/```[\s\S]*?```/g, '');
+    s = s.replace(/\|[^\n]+\|/g, '');
+    s = s.replace(/^#{1,6}\s+/gm, '');
+    s = s.replace(/\*\*/g, '').replace(/`/g, '');
+    // Get first meaningful line
+    const lines = s.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    s = lines.slice(0, 3).join(' ');
+    s = s.trim();
+    if (s.length > 150) s = s.slice(0, 147) + '…';
+    return s || farmState(state).text;
+  }
+
+  // Show speech bubble for a crawfish
+  function showBubble(agent, cxEl) {
+    if (!agent || !cxEl) return;
+
+    // Toggle off if same
+    if (selectedSid === agent.sessionId) {
+      hideBubble();
+      return;
+    }
+
+    hideBubble();
+    selectedSid = agent.sessionId;
+    cxEl.classList.add('selected');
+
+    const fs = farmState(agent.state);
+    const container = document.getElementById('bubble-container');
+    const scene = document.getElementById('scene');
+    const sceneRect = scene.getBoundingClientRect();
+    const cxRect = cxEl.getBoundingClientRect();
+
+    // Build bubble
+    const bub = document.createElement('div');
+    bub.className = 'bubble';
+    bub.id = 'active-bubble';
+
+    const box = document.createElement('div');
+    box.className = 'bubble-box';
+
+    // Name row
+    const nameRow = document.createElement('div');
+    nameRow.className = 'bubble-name';
+    nameRow.innerHTML =
+      '<span class="bubble-emoji">' + fs.emoji + '</span> ' +
+      (agent.projectName || agent.sessionId.slice(0, 12)) +
+      ' <span class="bubble-state ' + agent.state + '">' + fs.label + '</span>';
+    box.appendChild(nameRow);
+
+    // Meta
+    const meta = document.createElement('div');
+    meta.className = 'bubble-meta';
+    meta.textContent = 'Lv' + agent.level + ' ' + (LNAME[agent.level] || '') +
+      '  ·  ' + fmt(agent.rawTokenUsage || 0) + ' feed  ·  ' + timeAgo(agent.lastActivityAt);
+    box.appendChild(meta);
+
+    // Separator
+    const sep = document.createElement('hr');
+    sep.className = 'bubble-sep';
+    box.appendChild(sep);
+
+    // Summary text
+    const label = document.createElement('div');
+    label.className = 'bubble-label';
+    label.textContent = agent.state === 'working' ? '🌿 doing now' : '📋 last activity';
+    box.appendChild(label);
+
+    const txt = document.createElement('div');
+    txt.className = 'bubble-text';
+    txt.textContent = summarize(agent.lastExchange, agent.state);
+    box.appendChild(txt);
+
+    bub.appendChild(box);
+
+    // Tail
+    const tail = document.createElement('div');
+    tail.className = 'bubble-tail';
+    bub.appendChild(tail);
+
+    container.appendChild(bub);
+
+    // Position: above the crawfish, clamped inside scene
+    const bubW = 220;
+    let left = (cxRect.left - sceneRect.left) + cxRect.width / 2 - 36;
+    left = Math.max(6, Math.min(left, sceneRect.width - bubW - 6));
+    let bottom = sceneRect.bottom - cxRect.top + 4;
+
+    bub.style.left = left + 'px';
+    bub.style.bottom = bottom + 'px';
+  }
+
+  // Hide bubble
+  function hideBubble() {
+    selectedSid = null;
+    const old = document.getElementById('active-bubble');
+    if (old) old.remove();
+    document.querySelectorAll('.cx.selected').forEach(el => el.classList.remove('selected'));
+  }
+
+  // Refresh bubble if still open
+  function refreshBubble() {
+    if (!selectedSid) return;
+    const agent = allAgents.find(a => a.sessionId === selectedSid);
+    const cxEl = document.querySelector('.cx[data-sid="' + selectedSid + '"]');
+    if (agent && cxEl) {
+      hideBubble();
+      selectedSid = agent.sessionId;
+      cxEl.classList.add('selected');
+      // Silently refresh content without re-animating
+      showBubble(agent, cxEl);
+    } else {
+      hideBubble();
+    }
+  }
+
   // Init
   generateGrass();
 
@@ -592,8 +875,18 @@
   document.getElementById('btn-close').addEventListener('click', () => window.api.quit());
   document.getElementById('btn-min').addEventListener('click', () => window.api.hide());
 
+  // Click anywhere on scene to dismiss bubble
+  document.getElementById('scene').addEventListener('click', (e) => {
+    if (selectedSid && !e.target.closest('.cx') && !e.target.closest('.bubble')) {
+      hideBubble();
+    }
+  });
+
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') window.api.hide();
+    if (e.key === 'Escape') {
+      if (selectedSid) hideBubble();
+      else window.api.hide();
+    }
   });
 
   // Listen for updates from main process
@@ -602,7 +895,9 @@
       sprites = data.sprites;
     }
     if (data.agents !== undefined) {
+      allAgents = data.agents;
       render(data.agents);
+      refreshBubble();
     }
   });
 </script>
