@@ -68,17 +68,10 @@ cd crayfish-farm
 npm install
 ```
 
-**Step 2: Generate sprites & build**
+**Step 2: Build**
 
 ```bash
-# Sprite generation (requires Python 3 + Pillow + numpy)
-pip3 install Pillow numpy
-npm run generate:sprites
-
-# Build (4 bundles via tsup)
 npm run build
-
-# Link globally
 npm link
 ```
 
