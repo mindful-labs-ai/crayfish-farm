@@ -152,7 +152,7 @@ function togglePanel(): void {
 }
 
 // Filter agents for the widget: most recently active 10
-const MAX_AGENTS = 10;
+const MAX_AGENTS = 8;
 
 function filterAgentsForWidget(agents: AgentInfo[]): AgentInfo[] {
   return [...agents]
