@@ -31,11 +31,12 @@ _Your agents are crawfish. Watch them grow._
 
 ### 🍎 Mac Menu Bar Widget
 
-<p align="center">
-  <img src="assets/notch_img1.png" alt="Menu bar widget — Crayfish Farm overview" width="420" />
-  &nbsp;&nbsp;
-  <img src="assets/notch_img2.png" alt="Menu bar widget — agent detail view" width="420" />
-</p>
+<table align="center">
+  <tr>
+    <td><img src="assets/notch_img1.png" alt="Menu bar widget — Crayfish Farm overview" width="380" /></td>
+    <td><img src="assets/notch_img2.png" alt="Menu bar widget — agent detail view" width="380" /></td>
+  </tr>
+</table>
 
 ### 🖥️ TUI Dashboard
 
