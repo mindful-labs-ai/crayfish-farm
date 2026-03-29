@@ -76,26 +76,45 @@ function loadSprites(): Record<string, string> {
   return sprites;
 }
 
-// Tray icon
-function makeTrayIcon(agents: AgentInfo[]): Electron.NativeImage {
-  if (agents.length === 0) return nativeImage.createEmpty();
-
-  // Find highest-level agent
-  const top = agents.reduce((best, a) => (a.level > best.level ? a : best), agents[0]);
-  const levelName = LEVEL_NAMES[top.level] || 'baby';
-  const state = top.state === 'working' ? 'working' : top.state === 'idle' ? 'idle' : 'sleeping';
+// Default tray icon (fallback)
+function defaultTrayIcon(): Electron.NativeImage {
   const dir = assetsDir();
-  const filePath = join(dir, `${levelName}_${state}.png`);
-
-  if (existsSync(filePath)) {
+  const fallback = join(dir, 'baby_idle.png');
+  if (existsSync(fallback)) {
     try {
-      const img = nativeImage.createFromPath(filePath);
-      return img.resize({ width: 18, height: 18 });
+      return nativeImage.createFromPath(fallback).resize({ width: 18, height: 18 });
     } catch {
       // fall through
     }
   }
-  return nativeImage.createEmpty();
+  // Last resort: 18x18 filled icon so tray is always visible
+  const buf = nativeImage.createFromBuffer(
+    Buffer.from('iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAAXNSR0IArs4c6QAAAGRJREFUOBFjYBhOwMiABv7//88AEmIB4v9QGl0Ii4gBSIMEQWx0IZAaZDEGdEEYG10tiA+mBtkQkBhMDl0MJIZNDCbHgC4BYhMSg6kB6cMqBhLEJoYuB+Jji6HLI/MZBhsAAHFiJ+rE5gj2AAAAAElFTkSuQmCC', 'base64')
+  ).resize({ width: 18, height: 18 });
+  return buf;
+}
+
+// Tray icon
+function makeTrayIcon(agents: AgentInfo[]): Electron.NativeImage {
+  const dir = assetsDir();
+
+  if (agents.length > 0) {
+    // Find highest-level agent
+    const top = agents.reduce((best, a) => (a.level > best.level ? a : best), agents[0]);
+    const levelName = LEVEL_NAMES[top.level] || 'baby';
+    const state = top.state === 'working' ? 'working' : top.state === 'idle' ? 'idle' : 'sleeping';
+    const filePath = join(dir, `${levelName}_${state}.png`);
+
+    if (existsSync(filePath)) {
+      try {
+        return nativeImage.createFromPath(filePath).resize({ width: 18, height: 18 });
+      } catch {
+        // fall through to default
+      }
+    }
+  }
+
+  return defaultTrayIcon();
 }
 
 // App state
@@ -189,9 +208,8 @@ app.on('ready', () => {
   // Load sprites
   loadedSprites = loadSprites();
 
-  // Create tray
-  const initialIcon = nativeImage.createEmpty();
-  tray = new Tray(initialIcon);
+  // Create tray with a visible default icon
+  tray = new Tray(defaultTrayIcon());
   tray.setToolTip('Crawfish Park');
 
   // Tray left-click

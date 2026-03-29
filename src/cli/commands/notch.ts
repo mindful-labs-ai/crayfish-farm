@@ -12,8 +12,8 @@ const NOTCH_PID_FILE = join(homedir(), '.crayfish-farm', 'notch.pid');
 function getNotchMainPath(): string {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = dirname(__filename);
-  // dist/cli/commands/ -> dist/notch/main.js
-  return resolve(__dirname, '../../notch/main.js');
+  // After tsup bundling: dist/cli/index.js -> dist/notch/main.js
+  return resolve(__dirname, '../notch/main.js');
 }
 
 function getElectronPath(): string {
