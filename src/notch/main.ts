@@ -76,22 +76,57 @@ function loadSprites(): Record<string, string> {
   return sprites;
 }
 
+// Fit image into a square by preserving aspect ratio (pad with transparent pixels)
+const TRAY_SIZE = 22;
+
+function fitToSquare(img: Electron.NativeImage): Electron.NativeImage {
+  const size = img.getSize();
+  if (size.width === 0 || size.height === 0) return img;
+
+  const max = Math.max(size.width, size.height);
+  // Scale down to TRAY_SIZE, preserving aspect ratio
+  const scale = TRAY_SIZE / max;
+  const newW = Math.round(size.width * scale);
+  const newH = Math.round(size.height * scale);
+  const resized = img.resize({ width: newW, height: newH });
+
+  // Create a transparent TRAY_SIZE x TRAY_SIZE canvas
+  const canvas = Buffer.alloc(TRAY_SIZE * TRAY_SIZE * 4, 0); // RGBA all zeros = transparent
+  const srcBuf = resized.toBitmap();
+  const srcSize = resized.getSize();
+
+  // Center the resized image on the canvas
+  const offX = Math.floor((TRAY_SIZE - srcSize.width) / 2);
+  const offY = Math.floor((TRAY_SIZE - srcSize.height) / 2);
+
+  for (let y = 0; y < srcSize.height; y++) {
+    for (let x = 0; x < srcSize.width; x++) {
+      const srcIdx = (y * srcSize.width + x) * 4;
+      const dstIdx = ((y + offY) * TRAY_SIZE + (x + offX)) * 4;
+      if (dstIdx >= 0 && dstIdx + 3 < canvas.length) {
+        canvas[dstIdx] = srcBuf[srcIdx]!;
+        canvas[dstIdx + 1] = srcBuf[srcIdx + 1]!;
+        canvas[dstIdx + 2] = srcBuf[srcIdx + 2]!;
+        canvas[dstIdx + 3] = srcBuf[srcIdx + 3]!;
+      }
+    }
+  }
+
+  return nativeImage.createFromBitmap(canvas, { width: TRAY_SIZE, height: TRAY_SIZE });
+}
+
 // Default tray icon (fallback)
 function defaultTrayIcon(): Electron.NativeImage {
   const dir = assetsDir();
   const fallback = join(dir, 'baby_idle.png');
   if (existsSync(fallback)) {
     try {
-      return nativeImage.createFromPath(fallback).resize({ width: 18, height: 18 });
+      return fitToSquare(nativeImage.createFromPath(fallback));
     } catch {
       // fall through
     }
   }
-  // Last resort: 18x18 filled icon so tray is always visible
-  const buf = nativeImage.createFromBuffer(
-    Buffer.from('iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAAXNSR0IArs4c6QAAAGRJREFUOBFjYBhOwMiABv7//88AEmIB4v9QGl0Ii4gBSIMEQWx0IZAaZDEGdEEYG10tiA+mBtkQkBhMDl0MJIZNDCbHgC4BYhMSg6kB6cMqBhLEJoYuB+Jji6HLI/MZBhsAAHFiJ+rE5gj2AAAAAElFTkSuQmCC', 'base64')
-  ).resize({ width: 18, height: 18 });
-  return buf;
+  return nativeImage.createEmpty();
 }
 
 // Tray icon — preload all frames for animation
@@ -107,7 +142,7 @@ function preloadTrayIcons(): void {
       const filePath = join(dir, `${key}.png`);
       if (existsSync(filePath)) {
         try {
-          trayIconCache.set(key, nativeImage.createFromPath(filePath).resize({ width: 18, height: 18 }));
+          trayIconCache.set(key, fitToSquare(nativeImage.createFromPath(filePath)));
         } catch { /* skip */ }
       }
     }

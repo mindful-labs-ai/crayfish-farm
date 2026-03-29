@@ -420,7 +420,7 @@
     align-items: center;
     gap: 2px;
     cursor: pointer;
-    transition: transform 0.15s;
+    transition: left 3s ease-in-out, bottom 3s ease-in-out, transform 0.15s;
   }
 
   .cx img {
@@ -463,9 +463,12 @@
   .c5 { color: #c0281a; }
 
   /* State animations via data-s attribute */
-  .cx[data-s="working"] img { animation: bounce 0.8s ease-in-out infinite; }
+  .cx[data-s="working"] img { animation: walk 0.4s ease-in-out infinite; }
   .cx[data-s="idle"]    img { animation: sway 3s ease-in-out infinite; }
   .cx[data-s="sleeping"] img { animation: breathe 4s ease-in-out infinite; }
+
+  /* Flip direction when walking left */
+  .cx.face-left img { transform: scaleX(-1); }
 
   /* Sleeping zzz indicator */
   .cx[data-s="sleeping"]::after {
@@ -493,10 +496,11 @@
     50%       { transform: rotate(4deg); }
   }
 
-  @keyframes bounce {
-    0%, 100% { transform: translateY(0) scaleY(1) rotate(-2deg); }
-    30%       { transform: translateY(-6px) scaleY(1.05) rotate(2deg); }
-    60%       { transform: translateY(-2px) scaleY(0.97) rotate(-1deg); }
+  @keyframes walk {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    25%      { transform: translateY(-3px) rotate(4deg); }
+    50%      { transform: translateY(0) rotate(0deg); }
+    75%      { transform: translateY(-3px) rotate(-4deg); }
   }
 
   @keyframes breathe {
@@ -878,9 +882,17 @@
         area.appendChild(el);
       }
 
-      // Update position
-      el.style.left = pos.left;
-      el.style.bottom = pos.bottom;
+      // Update position — working agents roam, others stay at assigned pos
+      if (agent.state !== 'working') {
+        el.style.left = pos.left;
+        el.style.bottom = pos.bottom;
+        el.classList.remove('face-left');
+      } else if (!el.dataset.roaming) {
+        // Initialize roaming position
+        el.style.left = pos.left;
+        el.style.bottom = pos.bottom;
+        el.dataset.roaming = '1';
+      }
 
       // Update state + level attributes for CSS
       el.dataset.s = agent.state;
@@ -888,6 +900,11 @@
 
       // z-index: working agents always in front
       el.style.zIndex = agent.state === 'working' ? '8' : agent.state === 'idle' ? '6' : '4';
+
+      // Clear roaming flag when no longer working
+      if (agent.state !== 'working') {
+        delete el.dataset.roaming;
+      }
 
       // Update sprite image
       const imgEl = el.querySelector('img');
@@ -1057,6 +1074,26 @@
     container.className = 'flowers';
     container.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:1;';
   }
+
+  // Roaming: move working agents to random positions every 3s
+  function roamWorking() {
+    document.querySelectorAll('.cx[data-s="working"]').forEach(el => {
+      const newLeft = (6 + Math.random() * 78).toFixed(1) + '%';
+      const newBottom = (8 + Math.random() * 34).toFixed(1) + '%';
+      const oldLeft = parseFloat(el.style.left) || 0;
+      const targetLeft = parseFloat(newLeft) || 0;
+      // Flip based on direction
+      if (targetLeft < oldLeft) {
+        el.classList.add('face-left');
+      } else {
+        el.classList.remove('face-left');
+      }
+      el.style.left = newLeft;
+      el.style.bottom = newBottom;
+    });
+  }
+
+  setInterval(roamWorking, 3000);
 
   // Init
   generateGrass();
