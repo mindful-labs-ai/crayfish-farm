@@ -94,27 +94,63 @@ function defaultTrayIcon(): Electron.NativeImage {
   return buf;
 }
 
-// Tray icon
-function makeTrayIcon(agents: AgentInfo[]): Electron.NativeImage {
+// Tray icon — preload all frames for animation
+const TRAY_STATES = ['idle', 'working', 'sleeping'] as const;
+let trayIconCache: Map<string, Electron.NativeImage> = new Map();
+
+function preloadTrayIcons(): void {
   const dir = assetsDir();
-
-  if (agents.length > 0) {
-    // Find highest-level agent
-    const top = agents.reduce((best, a) => (a.level > best.level ? a : best), agents[0]);
-    const levelName = LEVEL_NAMES[top.level] || 'baby';
-    const state = top.state === 'working' ? 'working' : top.state === 'idle' ? 'idle' : 'sleeping';
-    const filePath = join(dir, `${levelName}_${state}.png`);
-
-    if (existsSync(filePath)) {
-      try {
-        return nativeImage.createFromPath(filePath).resize({ width: 18, height: 18 });
-      } catch {
-        // fall through to default
+  for (let level = 1; level <= 5; level++) {
+    const name = LEVEL_NAMES[level] || 'baby';
+    for (const state of TRAY_STATES) {
+      const key = `${name}_${state}`;
+      const filePath = join(dir, `${key}.png`);
+      if (existsSync(filePath)) {
+        try {
+          trayIconCache.set(key, nativeImage.createFromPath(filePath).resize({ width: 18, height: 18 }));
+        } catch { /* skip */ }
       }
     }
   }
+}
 
-  return defaultTrayIcon();
+function getTrayIcon(levelName: string, state: string): Electron.NativeImage {
+  return trayIconCache.get(`${levelName}_${state}`) ?? defaultTrayIcon();
+}
+
+// Animated tray icon state
+let trayAnimFrame = 0;
+let trayAnimInterval: ReturnType<typeof setInterval> | null = null;
+let lastTrayAgents: AgentInfo[] = [];
+
+// Animation: cycle between idle/working frames for the top agent
+function startTrayAnimation(): void {
+  if (trayAnimInterval) return;
+  trayAnimInterval = setInterval(() => {
+    if (!tray || lastTrayAgents.length === 0) return;
+    trayAnimFrame++;
+
+    const top = lastTrayAgents.reduce((best, a) => (a.level > best.level ? a : best), lastTrayAgents[0]);
+    const levelName = LEVEL_NAMES[top.level] || 'baby';
+    const hasWorking = lastTrayAgents.some(a => a.state === 'working');
+
+    if (hasWorking) {
+      // Bounce between working and idle frames
+      const state = trayAnimFrame % 2 === 0 ? 'working' : 'idle';
+      tray.setImage(getTrayIcon(levelName, state));
+    } else {
+      // Gentle: alternate idle/sleeping
+      const state = trayAnimFrame % 4 === 0 ? 'sleeping' : 'idle';
+      tray.setImage(getTrayIcon(levelName, state));
+    }
+  }, 600);
+}
+
+function stopTrayAnimation(): void {
+  if (trayAnimInterval) {
+    clearInterval(trayAnimInterval);
+    trayAnimInterval = null;
+  }
 }
 
 // App state
@@ -171,15 +207,11 @@ function sendData(): void {
     agents = [];
   }
 
-  // Update tray icon and tooltip
+  // Feed animation with latest agents
+  lastTrayAgents = agents;
   if (tray) {
-    try {
-      tray.setImage(makeTrayIcon(agents));
-    } catch {
-      // ignore tray icon errors
-    }
     const active = agents.filter((a) => a.state === 'working').length;
-    tray.setToolTip(`Crawfish Park — ${agents.length} sessions, ${active} active`);
+    tray.setToolTip(`Crayfish Farm — ${agents.length} sessions, ${active} active`);
   }
 
   if (!spritesSent) {
@@ -192,6 +224,7 @@ function sendData(): void {
 
 // Shutdown
 function shutdown(): void {
+  stopTrayAnimation();
   if (pollInterval) {
     clearInterval(pollInterval);
     pollInterval = null;
@@ -216,10 +249,14 @@ app.on('ready', () => {
 
   // Load sprites
   loadedSprites = loadSprites();
+  preloadTrayIcons();
 
   // Create tray with a visible default icon
   tray = new Tray(defaultTrayIcon());
-  tray.setToolTip('Crawfish Park');
+  tray.setToolTip('Crayfish Farm');
+
+  // Start tray animation
+  startTrayAnimation();
 
   // Tray left-click
   tray.on('click', () => {
