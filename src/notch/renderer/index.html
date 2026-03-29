@@ -11,7 +11,7 @@
     width: 480px;
     height: 520px;
     overflow: hidden;
-    background: #14161e;
+    background: #3d8828;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     -webkit-font-smoothing: antialiased;
     user-select: none;
@@ -23,15 +23,15 @@
     width: 100%;
     height: 100%;
     border-radius: 14px;
-    background: #14161e;
+    background: #3d8828;
     overflow: hidden;
   }
 
-  /* Header */
+  /* Header — wooden barn header */
   #head {
     height: 42px;
     min-height: 42px;
-    background: #0d0f15;
+    background: linear-gradient(180deg, #8b6240, #6e4b30);
     display: flex;
     align-items: center;
     padding: 0 14px;
@@ -56,143 +56,251 @@
   #head-title {
     flex: 1;
     text-align: center;
-    font-size: 13px;
-    font-weight: 600;
-    color: #e0e4f0;
-    letter-spacing: 0.3px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #faebd7;
+    letter-spacing: 0.5px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
   }
 
   #head-sub {
     font-size: 10px;
-    color: #5a607a;
+    color: #d4b896;
   }
 
-  /* Scene */
+  /* Scene — bright farm daytime */
   #scene {
     flex: 1;
     position: relative;
     overflow: hidden;
-    /* Sky gradient */
-    background: linear-gradient(180deg, #0a0e1a 0%, #0d1520 40%, #0f1f10 100%);
+    background: linear-gradient(180deg, #7ec8e3 0%, #a8dce8 35%, #c5e8a0 50%, #6db848 50%, #4a9a30 70%, #3d8828 100%);
   }
 
-  /* Stars */
+  /* Clouds */
   #scene::before {
     content: '';
     position: absolute;
     inset: 0;
     background:
-      radial-gradient(1px 1px at 10% 15%, #fff 0%, transparent 100%),
-      radial-gradient(1px 1px at 25% 8%, #fff 0%, transparent 100%),
-      radial-gradient(1px 1px at 45% 20%, #fff 0%, transparent 100%),
-      radial-gradient(1px 1px at 65% 12%, #fff 0%, transparent 100%),
-      radial-gradient(1px 1px at 80% 6%, #fff 0%, transparent 100%),
-      radial-gradient(1px 1px at 92% 18%, #fff 0%, transparent 100%);
-    opacity: 0.7;
+      radial-gradient(ellipse 60px 26px at 18% 18%, rgba(255,255,255,0.85) 0%, transparent 100%),
+      radial-gradient(ellipse 44px 20px at 24% 16%, rgba(255,255,255,0.9) 0%, transparent 100%),
+      radial-gradient(ellipse 70px 28px at 55% 10%, rgba(255,255,255,0.8) 0%, transparent 100%),
+      radial-gradient(ellipse 50px 22px at 62% 8%, rgba(255,255,255,0.85) 0%, transparent 100%),
+      radial-gradient(ellipse 40px 18px at 82% 22%, rgba(255,255,255,0.75) 0%, transparent 100%);
     pointer-events: none;
+    animation: cloudDrift 60s linear infinite;
   }
 
-  /* Moon */
+  @keyframes cloudDrift {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-30px); }
+  }
+
+  /* Sun */
   #scene::after {
     content: '';
     position: absolute;
-    top: 14px;
-    right: 30px;
-    width: 28px;
-    height: 28px;
+    top: 18px;
+    right: 40px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
-    background: radial-gradient(circle at 40% 40%, #fffde0, #f5d060 60%, #e8b030);
-    box-shadow: 0 0 12px 4px rgba(245, 208, 96, 0.35);
+    background: radial-gradient(circle at 45% 45%, #fff8c0, #ffd740 50%, #f5a623);
+    box-shadow: 0 0 24px 10px rgba(255, 215, 64, 0.35), 0 0 60px 20px rgba(255, 200, 50, 0.15);
     pointer-events: none;
   }
 
-  /* Trees */
-  .tree {
+  /* Barn */
+  .barn {
     position: absolute;
-    bottom: 50%;
-    width: 0;
-    height: 0;
+    left: 2%;
+    bottom: calc(50% - 4px);
+    width: 52px;
+    height: 40px;
+    background: linear-gradient(180deg, #c0392b 0%, #a93226 100%);
+    border-radius: 2px;
     pointer-events: none;
+    z-index: 2;
   }
 
-  .tree::before,
-  .tree::after {
+  /* Barn roof */
+  .barn::before {
     content: '';
     position: absolute;
+    top: -18px;
+    left: -6px;
     width: 0;
     height: 0;
-    border-style: solid;
+    border-left: 32px solid transparent;
+    border-right: 32px solid transparent;
+    border-bottom: 20px solid #922b21;
   }
 
-  .tree-1 { left: 4%; bottom: calc(50% - 2px); }
-  .tree-1::before {
-    border-width: 0 14px 28px 14px;
-    border-color: transparent transparent #1a4a1a transparent;
-    bottom: 0; left: -14px;
-  }
-  .tree-1::after {
-    border-width: 0 10px 22px 10px;
-    border-color: transparent transparent #22602a transparent;
-    bottom: 18px; left: -10px;
-  }
-
-  .tree-2 { right: 8%; bottom: calc(50% - 2px); }
-  .tree-2::before {
-    border-width: 0 18px 36px 18px;
-    border-color: transparent transparent #163c16 transparent;
-    bottom: 0; left: -18px;
-  }
-  .tree-2::after {
-    border-width: 0 12px 26px 12px;
-    border-color: transparent transparent #1e5224 transparent;
-    bottom: 22px; left: -12px;
+  /* Barn door */
+  .barn::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 18px;
+    height: 22px;
+    background: #6b1a12;
+    border-radius: 9px 9px 0 0;
   }
 
-  .tree-3 { left: 38%; bottom: calc(50% - 2px); }
-  .tree-3::before {
-    border-width: 0 11px 22px 11px;
-    border-color: transparent transparent #1c4a20 transparent;
-    bottom: 0; left: -11px;
-  }
-  .tree-3::after {
-    border-width: 0 8px 16px 8px;
-    border-color: transparent transparent #245e2c transparent;
-    bottom: 14px; left: -8px;
+  /* Barn silo */
+  .barn-silo {
+    position: absolute;
+    left: 50px;
+    bottom: calc(50% - 4px);
+    width: 18px;
+    height: 50px;
+    background: linear-gradient(180deg, #bbb 0%, #999 100%);
+    border-radius: 4px 4px 0 0;
+    pointer-events: none;
+    z-index: 1;
   }
 
-  /* Ground */
+  .barn-silo::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 2px;
+    width: 14px;
+    height: 8px;
+    background: #aaa;
+    border-radius: 50%;
+  }
+
+  /* Fence */
+  .fence {
+    position: absolute;
+    bottom: 50%;
+    height: 22px;
+    display: flex;
+    gap: 10px;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .fence-left  { left: 60px; transform: translateY(50%); }
+  .fence-right { right: 4px; transform: translateY(50%); }
+
+  .fence-post {
+    width: 4px;
+    height: 22px;
+    background: linear-gradient(180deg, #c9a96e, #a0855a);
+    border-radius: 1px;
+    position: relative;
+  }
+
+  .fence-post::before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: -3px;
+    width: 10px;
+    height: 2px;
+    background: #b89860;
+    border-radius: 1px;
+  }
+
+  .fence-post::after {
+    content: '';
+    position: absolute;
+    top: 12px;
+    left: -3px;
+    width: 10px;
+    height: 2px;
+    background: #b89860;
+    border-radius: 1px;
+  }
+
+  /* Fence rails connecting posts */
+  .fence-rail {
+    position: absolute;
+    bottom: 50%;
+    height: 2px;
+    background: #b89860;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .fence-rail-left  { left: 62px; width: 54px; transform: translateY(-6px); }
+  .fence-rail-right { right: 6px; width: 54px; transform: translateY(-6px); }
+
+  .fence-rail::after {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #b89860;
+  }
+
+  /* Ground — bright green pasture */
   .ground {
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
     height: 50%;
-    background: linear-gradient(180deg, #1a3a18 0%, #162e14 50%, #112210 100%);
+    background: linear-gradient(180deg, #5aac36 0%, #4a9a2e 30%, #3e8a26 60%, #357820 100%);
     pointer-events: none;
   }
 
-  /* Pond */
+  /* Dirt path */
+  .ground::before {
+    content: '';
+    position: absolute;
+    top: 20%;
+    left: -5%;
+    right: -5%;
+    height: 18px;
+    background: linear-gradient(90deg, transparent 0%, rgba(160, 130, 80, 0.25) 30%, rgba(160, 130, 80, 0.3) 50%, rgba(160, 130, 80, 0.25) 70%, transparent 100%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  /* Pond — blue water */
   .pond {
     position: absolute;
-    bottom: 22%;
-    right: 6%;
-    width: 90px;
-    height: 40px;
+    bottom: 8%;
+    right: 10%;
+    width: 80px;
+    height: 36px;
     border-radius: 50%;
-    background: radial-gradient(ellipse at 40% 40%, #1a3a5c, #0e2240 70%, #081820);
+    background: radial-gradient(ellipse at 40% 35%, #68b8e0, #3a90c4 60%, #2878a8);
+    box-shadow: inset 0 -3px 6px rgba(0,0,0,0.12), 0 1px 0 rgba(255,255,255,0.2);
     animation: shimmer 4s ease-in-out infinite;
     pointer-events: none;
+    z-index: 1;
   }
 
-  /* Grass strips */
+  /* Pond highlight */
+  .pond::after {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 18px;
+    width: 24px;
+    height: 8px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 50%;
+  }
+
+  /* Grass blades along horizon */
   .grass {
     position: absolute;
     bottom: 50%;
     left: 0;
     right: 0;
-    height: 14px;
+    height: 16px;
     display: flex;
     pointer-events: none;
+    z-index: 3;
   }
 
   .grass-1 { bottom: 50%; }
@@ -203,11 +311,36 @@
     display: inline-block;
     width: 3px;
     margin: 0 1.5px;
-    background: linear-gradient(to top, #2a6a20, #3a8a2a);
+    background: linear-gradient(to top, #4a9a30, #6cbd42);
     border-radius: 2px 2px 0 0;
     transform-origin: bottom center;
     animation: sway 3s ease-in-out infinite;
     font-style: normal;
+  }
+
+  /* Small flowers scattered on ground */
+  .flowers {
+    position: absolute;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .flower {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  .flower::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    width: 1px;
+    height: 5px;
+    background: #4a8a28;
+    transform: translateX(-50%);
   }
 
   /* Crawfish area */
@@ -235,45 +368,48 @@
 
   #empty .empty-text {
     font-size: 11px;
-    color: #4a5068;
+    color: #2d6418;
     text-align: center;
     line-height: 1.5;
     max-width: 220px;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.3);
   }
 
-  /* Stats bar */
+  /* Stats bar — wooden plank */
   #stats {
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
-    height: 28px;
-    background: rgba(13, 15, 21, 0.82);
+    height: 32px;
+    background: linear-gradient(180deg, #7a5530, #5e3f22);
+    border-top: 2px solid #8b6240;
     display: flex;
     align-items: center;
     justify-content: space-around;
-    padding: 0 12px;
-    backdrop-filter: blur(4px);
+    padding: 0 16px;
   }
 
   .stat-item {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 1px;
+    gap: 4px;
+  }
+
+  .stat-icon {
+    font-size: 12px;
   }
 
   .stat-val {
-    font-size: 11px;
-    font-weight: 600;
-    color: #c8ceea;
+    font-size: 12px;
+    font-weight: 700;
+    color: #faebd7;
+    text-shadow: 0 1px 1px rgba(0,0,0,0.3);
   }
 
   .stat-lbl {
-    font-size: 9px;
-    color: #454a64;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    font-size: 10px;
+    color: #d4b896;
   }
 
   /* Crawfish elements */
@@ -296,31 +432,35 @@
 
   .cx .cx-name {
     font-size: 9px;
-    color: #9aa0c0;
+    font-weight: 600;
+    color: #1a3a10;
     white-space: nowrap;
     max-width: 80px;
     overflow: hidden;
     text-overflow: ellipsis;
     text-align: center;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.35);
   }
 
   .cx .cx-lvl {
     font-size: 8px;
     font-weight: 700;
     letter-spacing: 0.3px;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.3);
   }
 
   .cx .cx-tok {
     font-size: 8px;
-    color: #5a607a;
+    color: #2d5a18;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.2);
   }
 
-  /* Level color classes */
-  .c1 { color: #888; }
-  .c2 { color: #00e5ff; }
-  .c3 { color: #69ff47; }
-  .c4 { color: #ffd740; }
-  .c5 { color: #ff1744; }
+  /* Level color classes — earthy farm palette */
+  .c1 { color: #6a6a60; }
+  .c2 { color: #1a8ab0; }
+  .c3 { color: #2a8a18; }
+  .c4 { color: #c88a10; }
+  .c5 { color: #c0281a; }
 
   /* State animations via data-s attribute */
   .cx[data-s="working"] img { animation: bounce 0.8s ease-in-out infinite; }
@@ -334,7 +474,9 @@
     top: -10px;
     right: -8px;
     font-size: 9px;
-    color: #6080b0;
+    color: #4a70a0;
+    font-weight: 700;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.4);
     animation: zzz 3s ease-in-out infinite;
   }
 
@@ -516,22 +658,34 @@
   <div id="head">
     <button class="win-btn" id="btn-close" title="Quit"></button>
     <button class="win-btn" id="btn-min" title="Hide"></button>
-    <div id="head-title">🦞 Crawfish Park</div>
+    <div id="head-title">🦞 Crayfish Farm</div>
     <span id="head-sub"></span>
   </div>
 
   <!-- Scene -->
   <div id="scene">
-    <!-- Trees (CSS-only) -->
-    <div class="tree tree-1"></div>
-    <div class="tree tree-2"></div>
-    <div class="tree tree-3"></div>
+    <!-- Barn -->
+    <div class="barn"></div>
+    <div class="barn-silo"></div>
+
+    <!-- Fences -->
+    <div class="fence fence-right">
+      <div class="fence-post"></div>
+      <div class="fence-post"></div>
+      <div class="fence-post"></div>
+      <div class="fence-post"></div>
+      <div class="fence-post"></div>
+      <div class="fence-post"></div>
+    </div>
 
     <!-- Ground -->
     <div class="ground"></div>
 
     <!-- Pond -->
     <div class="pond"></div>
+
+    <!-- Flowers -->
+    <div id="flower-container"></div>
 
     <!-- Grass strips (generated by JS) -->
     <div class="grass grass-1" id="grass-1"></div>
@@ -553,16 +707,19 @@
     <!-- Stats bar -->
     <div id="stats">
       <div class="stat-item">
+        <span class="stat-icon">🦞</span>
         <span class="stat-val" id="stat-sessions">0</span>
-        <span class="stat-lbl">Sessions</span>
+        <span class="stat-lbl">crayfish</span>
       </div>
       <div class="stat-item">
-        <span class="stat-val" id="stat-active">0</span>
+        <span class="stat-icon">🌾</span>
         <span class="stat-lbl">Active</span>
+        <span class="stat-val" id="stat-active">0</span>
       </div>
       <div class="stat-item">
+        <span class="stat-icon">🪣</span>
+        <span class="stat-lbl">Feed</span>
         <span class="stat-val" id="stat-tokens">0</span>
-        <span class="stat-lbl">Tokens</span>
       </div>
     </div>
   </div>
@@ -707,7 +864,7 @@
       lvlEl.className = 'cx-lvl c' + (agent.level || 1);
 
       // Update token count
-      el.querySelector('.cx-tok').textContent = fmt(agent.rawTokenUsage || 0);
+      el.querySelector('.cx-tok').textContent = fmt(agent.rawTokenUsage || 0) + ' feed';
 
       // Click handler — show speech bubble
       el.onclick = (e) => { e.stopPropagation(); showBubble(agent, el); };
@@ -726,6 +883,13 @@
     document.getElementById('stat-sessions').textContent = String(agents.length);
     document.getElementById('stat-active').textContent = String(active);
     document.getElementById('stat-tokens').textContent = fmt(totalRaw);
+
+    // Update header subtitle
+    const sub = document.getElementById('head-sub');
+    if (sub) {
+      const feeding = agents.filter(a => a.state === 'working').length;
+      sub.textContent = agents.length + ' crayfish · ' + feeding + ' feeding';
+    }
   }
 
   // Farm-themed state descriptions
@@ -868,8 +1032,27 @@
     }
   }
 
+  // Generate scattered flowers on the ground
+  function generateFlowers() {
+    const container = document.getElementById('flower-container');
+    if (!container) return;
+    const colors = ['#f5e642', '#e8a0d0', '#ff8888', '#ffcc44', '#ffffff'];
+    for (let i = 0; i < 12; i++) {
+      const f = document.createElement('div');
+      f.className = 'flower';
+      f.style.left = (8 + Math.random() * 80) + '%';
+      f.style.bottom = (4 + Math.random() * 36) + '%';
+      f.style.background = colors[Math.floor(Math.random() * colors.length)];
+      f.style.opacity = (0.5 + Math.random() * 0.4).toFixed(2);
+      container.appendChild(f);
+    }
+    container.className = 'flowers';
+    container.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:1;';
+  }
+
   // Init
   generateGrass();
+  generateFlowers();
 
   // Event listeners
   document.getElementById('btn-close').addEventListener('click', () => window.api.quit());
