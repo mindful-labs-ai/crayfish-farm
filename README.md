@@ -10,10 +10,6 @@
 
 _Your agents are crawfish. Watch them grow._
 
-<p align="center">
-  <img src="assets/grow_system.png" alt="Growth System — Baby → Juvenile → Adult → Warrior → King" width="700" />
-</p>
-
 [Quick Start](#quick-start) • [Commands](#cli-commands) • [Widget](#-mac-menu-bar-widget) • [Architecture](#architecture) • [Development](#development)
 
 ### 📺 See it in Action
@@ -27,6 +23,24 @@ _Your agents are crawfish. Watch them grow._
 <p align="center">
   <em>Monitor sessions as virtual crawfish that level up from Baby → King based on token usage.<br>
   Focus with timers. Get nudged with dopamine. Never get shamed.</em>
+</p>
+
+---
+
+## What It Looks Like
+
+### 🍎 Mac Menu Bar Widget
+
+<p align="center">
+  <img src="assets/notch_img1.png" alt="Menu bar widget — Crayfish Farm overview" width="420" />
+  &nbsp;&nbsp;
+  <img src="assets/notch_img2.png" alt="Menu bar widget — agent detail view" width="420" />
+</p>
+
+### 🖥️ TUI Dashboard
+
+<p align="center">
+  <img src="assets/dash_img1.png" alt="Terminal dashboard with ASCII crawfish sprites" width="700" />
 </p>
 
 ---
@@ -154,6 +168,10 @@ An Electron-powered tray widget themed as a farm:
 ## Crawfish Levels
 
 Token usage drives level progression. Tokens decay over time when sessions are idle or sleeping.
+
+<p align="center">
+  <img src="assets/grow_system.png" alt="Growth System — Baby → Juvenile → Adult → Warrior → King" width="700" />
+</p>
 
 | Level | Name | Threshold | Color |
 |-------|------|-----------|-------|
